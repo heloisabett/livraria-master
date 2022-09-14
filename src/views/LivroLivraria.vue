@@ -1,41 +1,32 @@
 <script>
-import axios from "axios";
+import LivrosApi from "@/api/livros.js";
+const livrosApi = new LivrosApi();
 export default {
   data() {
     return {
-      livros: [
-        {
-          nome: "Os 7 maridos de Evilyn Hugo",
-          categoria: "Ficção histórica, romance",
-          autor: "Taylor Jenkins Reid",
-          editora: "Paralela",
-        },
-      ],
-      novo_livro: "",
-      nova_categoria: "",
-      novo_autor: "",
-      nova_editora: "",
+      livro: {},
+      livros: [],
     };
   },
   async created() {
-    const livros = await axios.get("http://localhost:4000/livros");
-    this.livros = livros.data;
+    this.livros = await livrosApi.buscarTodosOsLivros();
   },
   methods: {
     async add() {
-      const livro = {
-        nome: this.novo_livro,
-        categoria: this.nova_categoria,
-        autor: this.novo_autor,
-        editora: this.nova_editora,
-      };
-      const indice = this.categorias.indexOf(categoria);
-      this.categorias.splice(indice, 1);
+      if (this.livro.id) {
+        await livrosApi.atualizarLivro(this.livro);
+      } else {
+        await livrosApi.adicionarLivro(this.livro);
+      }
+      this.livros = await livrosApi.buscarTodosOsLivros();
+      this.livro = {};
     },
     async excluir(livro) {
-      await axios.delete(`http://localhost:4000/livros/${livro.id}`);
-      const indice = this.livros.indexOf(livro);
-      this.livros.splice(indice, 1);
+      await livrosApi.excluirLivro(livro.id);
+      this.livros = await livrosApi.buscarTodosOsLivros();
+    },
+    edit(livro) {
+      Object.assign(this.livro, livro);
     },
   },
 };
@@ -46,14 +37,20 @@ export default {
       <h2>LIVROS</h2>
     </div>
     <div class="form_input">
-      <input type="text" placeholder="Informe nome" v-model="novo_livro" />
+      <input type="text" placeholder="Informe nome" v-model="livro.nome" @keydown.enter="add" />
       <input
         type="text"
         placeholder="Informe categoria"
-        v-model="nova_categoria"
+        v-model="livro.categoria"
+        @keydown.enter="add"
       />
-      <input type="text" placeholder="Informe autor" v-model="novo_autor" />
-      <input type="text" placeholder="Informe editora" v-model="nova_editora" />
+      <input type="text" placeholder="Informe autor" v-model="livro.autor" @keydown.enter="add" />
+      <input
+        type="text"
+        placeholder="Informe editora"
+        v-model="livro.editora"
+        @keydown.enter="add"
+      />
       <button @click="add">Add</button>
     </div>
     <div class="list_livros">
